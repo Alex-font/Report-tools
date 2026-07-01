@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Конструктор звітів БпЛА</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <style>
+        /* Ваші стилі залишені без змін */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        body { background-color: #f4f6f9; color: #333; padding: 15px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 20px; }
+        @media (min-width: 768px) { .container { flex-direction: row; } .left-panel { flex: 1.3; } .right-panel { flex: 1; position: sticky; top: 15px; height: max-content; } }
+        .form-group { margin-bottom: 12px; display: flex; flex-direction: column; gap: 5px; }
+        label { font-weight: bold; font-size: 14px; color: #222; }
+        input, textarea { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; background-color: #fafafa; }
+        .btn-copy { width: 100%; padding: 15px; font-size: 18px; font-weight: bold; background-color: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        .preview-box { background-color: #fdf2f2; color: #d32f2f; padding: 15px; border: 1px solid #f5c6cb; border-radius: 6px; font-size: 16px; min-height: 150px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="left-panel">
+        <div class="form-group"><label>Час злету:</label><input type="time" id="takeoff_time"></div>
+        <div class="form-group"><label>Час посадки:</label><input type="time" id="landing_time"></div>
+        <div class="form-group"><label>Дата:</label><input type="date" id="date"></div>
+        <div class="form-group"><label>Тип підрозділу:</label><input type="text" id="type"></div>
+        <div class="form-group"><label>Позивний:</label><input type="text" id="callsign"></div>
+        <div class="form-group"><label>Підпорядкування:</label><input type="text" id="sub"></div>
+        <div class="form-group"><label>Корпус:</label><input type="text" id="corp"></div>
+        <div class="form-group"><label>Населений пункт (в районі):</label><input type="text" id="loc"></div>
+        <div class="form-group"><label>Область:</label><input type="text" id="reg"></div>
+        <div class="form-group"><label>Статус:</label><input type="text" id="status"></div>
+        <div class="form-group"><label>Азимут:</label><input type="text" id="azimuth"></div>
+        <div class="form-group"><label>Курс:</label><input type="text" id="course"></div>
+        <div class="form-group"><label>Дальність:</label><input type="text" id="dist"></div>
+        <div class="form-group"><label>Висота:</label><input type="text" id="alt"></div>
+        <div class="form-group"><label>Тип виявленого БпЛА:</label><input type="text" id="uav"></div>
+        <div class="form-group"><label>Що застосовано:</label><input type="text" id="action"></div>
+        <div class="form-group"><label>Статус цілі:</label><input type="text" id="target_status"></div>
+        <div class="form-group"><label>Витрати:</label><input type="text" id="expenses"></div>
+        <div class="form-group"><label>Причина не знищення:</label><textarea id="reason" rows="3"></textarea></div>
+    </div>
+    <div class="right-panel">
+        <button class="btn-copy" onclick="generateAndCopy()">Сформувати звіт</button>
+        <div class="preview-box" id="preview"></div>
+    </div>
+</div>
+
+<script>
+    const fieldIds = ['takeoff_time', 'landing_time', 'date', 'type', 'callsign', 'sub', 'corp', 'loc', 'reg', 'status', 'azimuth', 'course', 'dist', 'alt', 'uav', 'action', 'target_status', 'expenses', 'reason'];
+
+    // Відновлення даних
+    fieldIds.forEach(id => {
+        const val = localStorage.getItem('uav_' + id);
+        if (val) document.getElementById(id).value = val;
+    });
+
+    function generateAndCopy() {
+        // Отримання значень
+        const val = (id) => document.getElementById(id).value.trim();
+        const az = val('azimuth'), co = val('course'), di = val('dist'), al = val('alt');
+
+        // Валідація: якщо введено цифри - перевіряємо їх
+        if ((!isNaN(az) && (az < 0 || az > 359)) || (!isNaN(co) && (co < 0 || co > 359))) {
+            alert("Помилка: Азимут або Курс мають бути 0-359!");
+            return;
+        }
+
+        // Зшивання (все як у вашому оригіналі)
+        const d = val('date').split('-');
+        const dateFmt = d.length === 3 ? `${d[2]}.${d[1]}.${d[0]}` : val('date');
+        
+        let report = `${val('takeoff_time')}-${val('landing_time')} ${dateFmt} ${val('type')} ${val('callsign')} ${val('sub')} ${val('corp')}. ${val('loc')} ${val('reg')}. ${val('status')} А-${val('azimuth')} К-${val('course')} Д-${val('dist')} В-${val('alt')} ${val('uav')}. ${val('action')}. ${val('target_status')}. ${val('expenses')}. ${val('reason')}`.replace(/\s+/g, ' ');
+
+        document.getElementById('preview').innerText = report;
+        fieldIds.forEach(id => localStorage.setItem('uav_' + id, document.getElementById(id).value));
+        
+        // Повернення до вашого методу копіювання
+        const ta = document.createElement("textarea");
+        ta.value = report;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        alert("Скопійовано!");
+    }
+</script>
+</body>
+</html>

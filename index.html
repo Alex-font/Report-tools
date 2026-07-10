@@ -26,7 +26,7 @@
 
         .btn-copy { width: 100%; padding: 15px; font-size: 18px; font-weight: bold; background-color: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; }
         
-        /* Стиль результату як у Заявці */
+        /* Стиль результату */
         .preview-box { background: #f9f9f9; padding: 15px; margin-top: 15px; border: 1px dashed #aaa; white-space: pre-wrap; font-family: monospace; }
     </style>
 </head>
@@ -80,7 +80,11 @@
         const d = val('date').split('-');
         const dateFmt = d.length === 3 ? `${d[2]}.${d[1]}.${d[0]}` : val('date');
         
-        let report = `${val('takeoff_time')}-${val('landing_time')} ${dateFmt} ${val('type')} ${val('callsign')} ${val('sub')} ${val('corp')}. ${val('loc')} ${val('reg')}. ${val('status')} А-${val('azimuth')} К-${val('course')} Д-${val('dist')} В-${val('alt')} ${val('uav')}. ${val('action')}. ${val('target_status')}. ${val('expenses')}. ${val('reason')}`.replace(/\s+/g, ' ');
+        // Додаємо "Витрати: " перед значенням, якщо поле заповнене
+        const expensesStr = val('expenses') ? `Витрати: ${val('expenses')}.` : "";
+        
+        // Збираємо звіт (якщо витрати порожні, expensesStr буде порожнім і не додасть зайвої крапки)
+        let report = `${val('takeoff_time')}-${val('landing_time')} ${dateFmt} ${val('type')} ${val('callsign')} ${val('sub')} ${val('corp')}. ${val('loc')} ${val('reg')}. ${val('status')} А-${val('azimuth')} К-${val('course')} Д-${val('dist')} В-${val('alt')} ${val('uav')}. ${val('action')}. ${val('target_status')}. ${expensesStr} ${val('reason')}`.replace(/\s+/g, ' ');
 
         document.getElementById('preview').innerText = report;
         fieldIds.forEach(id => localStorage.setItem('uav_' + id, document.getElementById(id).value));
